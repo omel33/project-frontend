@@ -1,12 +1,283 @@
-<html>
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>RPG</title>
-    <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="icon" href="/resources/favicon.ico" type="image/x-icon" />
     <link href="/css/my.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<h1>RPG admin panel</h1>
-<h2>Accounts list:</h2>
+<div class="container">
+    <h1 class="text-center my-4">RPG Admin Panel</h1>
+    <h2>Accounts list:</h2>
+    <div class="counts">
+        <p>Count per page:</p>
+        <select class="select form-control" onchange="changeCount(this)">
+        </select>
+    </div>
+    <table class="table table-bordered mt-4">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Title</th>
+            <th scope="col">Race</th>
+            <th scope="col">Profession</th>
+            <th scope="col">Level</th>
+            <th scope="col">Birthday</th>
+            <th scope="col">Banned</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <div class="buttons d-flex justify-content-center my-4">
+    </div>
+    <div class="border mb-4"></div>
+    <div class="form">
+        <h2>Create new account:</h2>
+        <form id="createAccountForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" class="form-control" name="name">
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" class="form-control" name="title">
+            </div>
+            <div class="form-group">
+                <label for="race">Race:</label>
+                <select id="race" class="form-control" name="race">
+                    <option value="HUMAN">HUMAN</option>
+                    <option value="DWARF">DWARF</option>
+                    <option value="ELF">ELF</option>
+                    <option value="GIANT">GIANT</option>
+                    <option value="ORC">ORC</option>
+                    <option value="TROLL">TROLL</option>
+                    <option value="HOBBIT">HOBBIT</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="profession">Profession:</label>
+                <select name="profession" id="profession" class="form-control">
+                    <option value="WARRIOR">WARRIOR</option>
+                    <option value="ROGUE">ROGUE</option>
+                    <option value="SORCERER">SORCERER</option>
+                    <option value="CLERIC">CLERIC</option>
+                    <option value="PALADIN">PALADIN</option>
+                    <option value="NAZGUL">NAZGUL</option>
+                    <option value="WARLOCK">WARLOCK</option>
+                    <option value="DRUID">DRUID</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="level">Level:</label>
+                <input type="text" id="level" class="form-control" name="level">
+            </div>
+            <div class="form-group">
+                <label for="birthday">Birthday:</label>
+                <input type="date" id="birthday" class="form-control" name="birthday">
+            </div>
+            <div class="form-group">
+                <label for="banned">Banned:</label>
+                <select id="banned" class="form-control" name="banned">
+                    <option value="false">false</option>
+                    <option value="true">true</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" onclick="CreateAccount()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    let code = "pageNumber=0&pageSize=3";
+    function fetchData(dataForRequest) {
+        $.get("rest/players?" + dataForRequest , function(data) {
+            for (let i = 0; i < data.length; i++) {
+                let player = Object.values(data[i]);
+                const timestamp = player[6];
+                const date = new Date(timestamp);
+                $("tbody").append("<tr>\n" +
+                    "      <th scope=\"row\">"+ player[0] +"</th>\n" +
+                    "      <td  id="+ player[0] +">"+ player[1] +"</td>\n" +
+                    "      <td id="+ player[0] +">"+ player[2] +"</td>\n" +
+                    "      <td id=opRace"+ player[0] +"><div>"+ player[3] +"</div></td>\n" +
+                    "      <td id=opProf"+ player[0] +"><div>"+ player[4] +"</div></td>\n" +
+                    "      <td>"+ player[5] +"</td>\n" +
+                    "      <td>"+ date.toLocaleDateString() +"</td>\n" +
+                    "      <td id=opBan"+ player[0] +"><div>"+ player[7] +"</div></td>\n" +
+                    "      <td><div class='edit' onclick='update(this)' ><img src='/img/edit.png' alt='edit'></div> </td>\n" +
+                    "      <td class='del'><div class='delete' onclick='deleteUser(this)'><img src='/img/delete.png' alt='delete'></div> </td>\n" +
+                    "    </tr>")
+            }
+        });
+    }
+    function clearTag() {
+        $("tbody").empty();
+    }
+    function deleteUser(element) {
+        $.ajax({
+            url: "rest/players/" +$(element).parent().parent().children().first().text(),
+            type: "DELETE",
+            success: function(data) {
+                clearTag();
+                fetchData(code);
+            }
+        })
+    }
+    function editElement(id, replace, userId) {
+        let textOldElement = $(id + userId).children().first().text();
+        let $select = $(replace);
+        $select.val(textOldElement);
+        $(id+userId).children().first().replaceWith($select);
+    }
+    function update(element) {
+        let row = $(element).closest("tr");
+        const userId = row.find("th").text();
+        row.find(".del").children().first().remove();
+        $(element).children().first().attr("src", "/img/save.png");
+        document.querySelectorAll('[id="'+userId+'"]').forEach(element => {
+            element.setAttribute("contenteditable", "true");
+        });
+        editElement("#opBan", '<select id="opBan' + userId + '">' +
+            '<option value="true">true</option>' +
+            '<option value="false">false</option>' +
+            '</select>', userId);
+        editElement("#opRace", '<select id="#opRace'+userId+'">' +
+            '<option value="HUMAN">HUMAN</option>' +
+            '<option value="DWARF">DWARF</option>' +
+            '<option value="ELF">ELF</option>' +
+            '<option value="GIANT">GIANT</option>' +
+            '<option value="ORC">ORC</option>' +
+            '<option value="TROLL">TROLL</option>' +
+            '<option value="HOBBIT">HOBBIT</option>' +
+            '</select>', userId);
+        editElement("#opProf", '<select id="#opProf'+userId+'">' +
+            '<option value="WARRIOR">WARRIOR</option>' +
+            '<option value="ROGUE">ROGUE</option>' +
+            '<option value="SORCERER">SORCERER</option>' +
+            '<option value="CLERIC">CLERIC</option>' +
+            '<option value="PALADIN">PALADIN</option>' +
+            '<option value="NAZGUL">NAZGUL</option>' +
+            '<option value="WARLOCK">WARLOCK</option>' +
+            '<option value="DRUID">DRUID</option>' +
+            '</select>', userId);
+        row.find(".edit").attr("onclick", "Save(this)");
+    }
+    function Save(element) {
+        let row = $(element).closest("tr");
+        const userId = row.find("th").text();
+        let Data = [];
+        document.querySelectorAll('[id="' + userId + '"]').forEach(element => {
+            Data.push(element.textContent);
+        });
+        let race = $("#opRace" + userId).children().first().val();
+        let prof = $("#opProf" + userId).children().first().val();
+        let ban = $("#opBan" + userId).children().first().val();
+        $.ajax({
+            url: "rest/players/" + userId,
+            type: "POST",
+            contentType: "application/json",
+            data:JSON.stringify({
+                name: Data[0],
+                title: Data[1],
+                race: race,
+                profession: prof,
+                banned: ban,
+            })
+        }).done(function(data) {
+            clearTag();
+            fetchData(code);
+        })
+    }
+    function loadPage() {
+        $.get("rest/players/count", function (data) {
+            for (let i = 0; i < data; i++) {
 
+                if (i == 2) {
+                    $(".select").append(`<option value="${i + 1}" selected>${i + 1}</option>`);
+                } else {
+                    $(".select").append(`<option value="${i + 1}">${i + 1}</option>`);
+                }
+            }
+        });
+    }
+    function changeCount(element) {
+        code = "pageNumber=0&pageSize=" + element.value;
+        $(".buttons").empty();
+        clearTag();
+        fetchData(code);
+        initPageButtons();
+    }
+    function initPageButtons() {
+        let pageSize = parseInt(code.split("=")[2]);
+        let pageNumber = parseInt(code.split("=")[1].split("&")[0]);
+        $.get('rest/players/count', function (data) {
+            for (let i = 0; i < data/pageSize; i++) {
+                if (i == pageNumber) {
+                    $(".buttons").append(`<button class='button' style="font-weight: bold; margin-right:4px" onclick="SetPage(this)">${i+1}</button>`)
+                } else if (i == 0) {
+                    $(".buttons").append(`<button class='button' onclick="SetPage(this)">${i+1}</button>`)
+                }
+                else {
+                    $(".buttons").append(`<button class='button' style="margin-right: 4px" onclick="SetPage(this)">${i+1}</button>`)
+                }
+            }
+        })
+    }
+    function SetPage(element) {
+        let pred = code.split("&")
+        let num = (Number($(element).text().trim())) - 1;
+        code = "pageNumber=" + num +"&"+ pred[1];
+        console.log(code)
+        $(".buttons").empty();
+        clearTag();
+        fetchData(code);
+        initPageButtons();
+    }
+    function CreateAccount() {
+        let birthday = $("#birthday").val();
+        let name = $("#name").val();
+        let banned = $("#banned").val();
+        let race = $("#race").val();
+        let prof = $("#profession").val();
+        let level = parseInt($("#level").val());
+        let title = $("#title").val();
+        let date = new Date(birthday);
+        let unixTimestamp = parseInt(date.getTime());
+        let obj = {
+            name: name.toString(),
+            title: title.toString(),
+            race: race.toString(),
+            profession: prof.toString(),
+            level: level,
+            birthday: unixTimestamp,
+            banned: banned === "true",
+        }
+        $.ajax({
+            url : `rest/players`,
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data:JSON.stringify(obj),
+        }).done(function(data) {
+            clearTag();
+            fetchData(code);
+            alert("Success")
+        })
+    }
+    fetchData(code);
+    loadPage();
+    initPageButtons();
+</script>
 </body>
 </html>

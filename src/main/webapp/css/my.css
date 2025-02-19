@@ -1,0 +1,41 @@
+
+body {
+    font-family: "Noto Sans", sans-serif;
+}
+.edit, .delete {
+    cursor: pointer;
+}
+table tbody  tr th, td {
+    border: 1px solid #000000;
+    text-align: center;
+    border-radius: 3px;
+}
+.counts {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 180px;
+}
+.counts .select {
+    height: 30px;
+    width: 40px;
+}
+.buttons {
+    margin-top: 10px;
+}
+.form-input {
+    margin-bottom: 10px ;
+    display: flex;
+    justify-content: space-between;
+    width: 250px;
+}
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.button {
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
